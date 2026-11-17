@@ -1,0 +1,44 @@
+# ==============================================================================
+# SmartHealthy - Git Ignore Configuration
+# ==============================================================================
+
+# 1. Environment & Secret Credentials
+.env
+.env.*
+!.env.example
+*.env
+
+# 2. Composer & PHP Dependencies
+/vendor/
+composer.phar
+phpunit.phar
+
+# 3. Application Logs & Temporary Files
+*.log
+/logs/
+/tmp/
+/scratch/
+.phpunit.result.cache
+test_connection.php
+scratch_*.php
+
+# 4. OS & System Artifacts
+.DS_Store
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+
+# 5. IDE & Editor Files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*~
+
+# 6. Backups & Temporary Dumps
+*.bak
+*.backup
+*.tmp
+*.sql.gz
+*.tar.gz

@@ -1,0 +1,66 @@
+name: SmartHealthy CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    name: Build, Lint & Unit Testing
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: smarthealthy
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=5
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v3
+
+      - name: Setup PHP Environment
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0'
+          extensions: mbstring, pdo, pdo_mysql, curl, json
+          tools: composer:v2
+
+      - name: Copy Environment Configuration
+        run: cp .env.example .env
+
+      - name: Import Database Schema & Seed Data
+        run: |
+          mysql -h 127.0.0.1 -P 3306 -u root smarthealthy < database/smarthealthy.sql
+
+      - name: Cache Composer Dependencies
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: Install Composer Dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Check PHP Syntax (Linter)
+        run: |
+          echo "Memeriksa sintaks PHP pada direktori app/ ..."
+          find app/ -type f -name "*.php" -print0 | xargs -0 -n1 php -l
+
+      - name: Run PHPUnit Test Suite
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: smarthealthy
+          DB_USERNAME: root
+          DB_PASSWORD: ''
+          AI_PROVIDER: mock
+        run: vendor/bin/phpunit --configuration phpunit.xml --testdox
